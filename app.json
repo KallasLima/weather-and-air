@@ -1,0 +1,21 @@
+{
+  "expo": {
+    "name": "Weather & Air",
+    "slug": "weather-and-air",
+    "version": "1.0.0",
+    "orientation": "default",
+    "userInterfaceStyle": "light",
+    "android": {
+      "package": "com.kallaslima.weatherandair"
+    },
+    "ios": {
+      "bundleIdentifier": "com.kallaslima.weatherandair",
+      "supportsTablet": true
+    },
+    "web": {
+      "name": "Weather & Air",
+      "shortName": "Weather & Air"
+    },
+    "plugins": ["./plugins/withShortNativePaths"]
+  }
+}
