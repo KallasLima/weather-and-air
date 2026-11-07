@@ -6,6 +6,7 @@ import {
   Pressable,
   ScrollView,
   ActivityIndicator,
+  Image,
   Linking,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -89,141 +90,147 @@ function WeatherApp() {
   }
   return (
     <SafeAreaView style={s.safe}>
-      <StatusBar style="dark" />
-      <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled">
-        <View style={s.container}>
-          <View style={s.header}>
-            <Text style={s.brand}>◒ WEATHER & AIR</Text>
-            <Text style={s.headerNote}>A little more outside.</Text>
-          </View>
-          <View style={s.intro}>
-            <Text style={s.eyebrow}>LOOK UP. BREATHE IN.</Text>
-            <Text style={s.title}>A sense of the place.</Text>
-            <Text style={s.subtitle}>Weather and air quality, together in one small view.</Text>
-          </View>
-          <View style={s.modeRow}>
-            <View style={s.modeButtons}>
-              <Button label="Offline demo" secondary={live} onPress={() => mode(false)} />
-              <Button label="Live search" secondary={!live} onPress={() => mode(true)} />
+      <StatusBar style="light" />
+      <View style={{ flex: 1 }}>
+        <Image
+          source={require('./assets/sky.webp')}
+          resizeMode="cover"
+          style={s.skyPhoto}
+          accessible={false}
+          pointerEvents="none"
+        />
+        <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled">
+          <View style={s.container}>
+            <View style={s.header}>
+              <Text style={s.brand}>Weather & Air</Text>
             </View>
-            <Text style={s.modeNote}>
-              {live ? 'Uses Photon and Open-Meteo.' : 'Simulated data · No network requests'}
-            </Text>
-          </View>
-          {live ? (
-            <View style={s.searchBox}>
-              <Text style={s.label}>Find an address or place</Text>
-              <TextInput
-                accessibilityLabel="Address or place"
-                style={s.input}
-                value={query}
-                maxLength={180}
-                onChangeText={setQuery}
-                placeholder="Try Eiffel Tower, Paris"
-                placeholderTextColor="#7d918c"
-                returnKeyType="search"
-                onSubmitEditing={search}
-                editable={!busy}
-              />
-              <View style={s.searchActions}>
-                <Text style={s.privacy}>
-                  Your search is sent to Photon. Coordinates are sent to Open-Meteo. Nothing is
-                  saved here.
-                </Text>
-                <Button
-                  label={busy ? 'Searching…' : 'Find location'}
-                  onPress={search}
-                  disabled={busy}
+            <View style={s.modeRow}>
+              <View style={s.modeButtons}>
+                <Button label="Offline demo" secondary={live} onPress={() => mode(false)} />
+                <Button label="Live search" secondary={!live} onPress={() => mode(true)} />
+              </View>
+              <Text style={s.modeNote}>
+                {live ? 'Uses Photon and Open-Meteo.' : 'Simulated data · No network requests'}
+              </Text>
+            </View>
+            {live ? (
+              <View style={s.searchBox}>
+                <Text style={s.label}>Find an address or place</Text>
+                <TextInput
+                  accessibilityLabel="Address or place"
+                  style={s.input}
+                  value={query}
+                  maxLength={180}
+                  onChangeText={setQuery}
+                  placeholder="Try Eiffel Tower, Paris"
+                  placeholderTextColor="#a5bfd2"
+                  returnKeyType="search"
+                  onSubmitEditing={search}
+                  editable={!busy}
                 />
+                <View style={s.searchActions}>
+                  <Text style={s.privacy}>
+                    Your search is sent to Photon. Coordinates are sent to Open-Meteo. Nothing is
+                    saved here.
+                  </Text>
+                  <Button
+                    label={busy ? 'Searching…' : 'Find location'}
+                    onPress={search}
+                    disabled={busy}
+                  />
+                </View>
+              </View>
+            ) : null}
+            {busy && (
+              <View style={s.loading}>
+                <ActivityIndicator color="#b8e6ef" />
+                <Text style={s.muted}>{place ? 'Getting conditions…' : 'Finding places…'}</Text>
+                <Button label="Cancel request" secondary onPress={cancel} />
+              </View>
+            )}
+            {error ? (
+              <View accessibilityRole="alert" style={s.errorBox}>
+                <Text style={s.error}>{error}</Text>
+                {place && !busy && (
+                  <Button label="Retry conditions" secondary onPress={() => select(place)} />
+                )}
+              </View>
+            ) : null}
+            {places.length > 0 && (
+              <View style={s.results}>
+                <Text style={s.label}>Choose the matching location</Text>
+                {places.map((p) => (
+                  <Pressable
+                    key={p.id}
+                    accessibilityRole="button"
+                    accessibilityLabel={'Select ' + p.name}
+                    onPress={() => select(p)}
+                    style={({ pressed }) => [s.place, pressed && { backgroundColor: '#214862' }]}
+                  >
+                    <Text style={s.placeName}>{p.name}</Text>
+                    <Text style={s.coordinate}>
+                      {p.latitude.toFixed(3)}°, {p.longitude.toFixed(3)}° →
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            )}
+            {searched && !places.length && !busy && (
+              <Text style={s.empty}>
+                No matching locations. Try a city, landmark or a fuller address.
+              </Text>
+            )}
+            {place && !busy && (
+              <View style={s.location}>
+                <Text style={s.locationName}>{place.name}</Text>
+                {live && (
+                  <Button label="Refresh conditions" secondary onPress={() => select(place)} />
+                )}
+              </View>
+            )}
+            {conditions && !busy && (
+              <View style={s.cards}>
+                <WeatherCard
+                  data={conditions.weather}
+                  error={conditions.weatherError}
+                  demo={!live}
+                />
+                <AirCard data={conditions.air} error={conditions.airError} demo={!live} />
+              </View>
+            )}
+            {live && !place && !places.length && !busy && !error && !searched && (
+              <View style={s.welcome}>
+                <Text style={s.welcomeSymbol}>◎</Text>
+                <Text style={s.welcomeTitle}>Start somewhere.</Text>
+                <Text style={s.muted}>Search a place and choose the result you mean.</Text>
+              </View>
+            )}
+            <View style={s.footer}>
+              <Text style={s.footerTitle}>ABOUT THE DATA</Text>
+              <Text style={s.footerText}>
+                {live
+                  ? 'Weather and air quality are model estimates. Source timestamps are shown in your local time.'
+                  : 'The offline demo uses a fixed sample from November 1, 2026. It does not describe current conditions.'}
+              </Text>
+              <View style={s.links}>
+                {[
+                  ['Open-Meteo', 'https://open-meteo.com/'],
+                  ['CAMS air quality', 'https://open-meteo.com/en/docs/air-quality-api'],
+                  ['Photon / OpenStreetMap', 'https://photon.komoot.io/'],
+                ].map(([label, url]) => (
+                  <Pressable
+                    accessibilityRole="link"
+                    key={label}
+                    onPress={() => Linking.openURL(url)}
+                  >
+                    <Text style={s.link}>{label} ↗</Text>
+                  </Pressable>
+                ))}
               </View>
             </View>
-          ) : null}
-          {busy && (
-            <View style={s.loading}>
-              <ActivityIndicator color="#315c59" />
-              <Text style={s.muted}>{place ? 'Getting conditions…' : 'Finding places…'}</Text>
-              <Button label="Cancel request" secondary onPress={cancel} />
-            </View>
-          )}
-          {error ? (
-            <View accessibilityRole="alert" style={s.errorBox}>
-              <Text style={s.error}>{error}</Text>
-              {place && !busy && (
-                <Button label="Retry conditions" secondary onPress={() => select(place)} />
-              )}
-            </View>
-          ) : null}
-          {places.length > 0 && (
-            <View style={s.results}>
-              <Text style={s.label}>Choose the matching location</Text>
-              {places.map((p) => (
-                <Pressable
-                  key={p.id}
-                  accessibilityRole="button"
-                  accessibilityLabel={'Select ' + p.name}
-                  onPress={() => select(p)}
-                  style={({ pressed }) => [s.place, pressed && { backgroundColor: '#e4ede6' }]}
-                >
-                  <Text style={s.placeName}>{p.name}</Text>
-                  <Text style={s.coordinate}>
-                    {p.latitude.toFixed(3)}°, {p.longitude.toFixed(3)}° →
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-          )}
-          {searched && !places.length && !busy && (
-            <Text style={s.empty}>
-              No matching locations. Try a city, landmark or a fuller address.
-            </Text>
-          )}
-          {place && !busy && (
-            <View style={s.location}>
-              <View style={s.locationDot} />
-              <Text style={s.locationName}>{place.name}</Text>
-              {live && (
-                <Button label="Refresh conditions" secondary onPress={() => select(place)} />
-              )}
-            </View>
-          )}
-          {conditions && !busy && (
-            <View style={s.cards}>
-              <WeatherCard data={conditions.weather} error={conditions.weatherError} demo={!live} />
-              <AirCard data={conditions.air} error={conditions.airError} demo={!live} />
-            </View>
-          )}
-          {live && !place && !places.length && !busy && !error && !searched && (
-            <View style={s.welcome}>
-              <Text style={s.welcomeSymbol}>◎</Text>
-              <Text style={s.welcomeTitle}>Start somewhere.</Text>
-              <Text style={s.muted}>Search a place and choose the result you mean.</Text>
-            </View>
-          )}
-          <View style={s.footer}>
-            <Text style={s.footerTitle}>ABOUT THE DATA</Text>
-            <Text style={s.footerText}>
-              {live
-                ? 'Weather and air quality are model estimates. Source timestamps are shown in your local time.'
-                : 'The offline demo uses a fixed sample from November 1, 2026. It does not describe current conditions.'}
-            </Text>
-            <View style={s.links}>
-              {[
-                ['Open-Meteo', 'https://open-meteo.com/'],
-                ['CAMS air quality', 'https://open-meteo.com/en/docs/air-quality-api'],
-                ['Photon / OpenStreetMap', 'https://photon.komoot.io/'],
-              ].map(([label, url]) => (
-                <Pressable
-                  accessibilityRole="link"
-                  key={label}
-                  onPress={() => Linking.openURL(url)}
-                >
-                  <Text style={s.link}>{label} ↗</Text>
-                </Pressable>
-              ))}
-            </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }

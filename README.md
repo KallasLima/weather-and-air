@@ -8,9 +8,11 @@ Search an address or place, choose the matching location and see weather plus ai
 
 This is a refreshed portfolio edition of an earlier technical exercise. The current implementation, demo data and interface were revised in 2026. It is a local learning/demo application; deployment, accounts and production operations are outside its scope.
 
+The blue sky background is generated decorative artwork bundled locally in `assets/sky.webp`. It is illustrative, not a live camera or forecast image.
+
 ## Run on the web
 
-Requires Node.js 22.13+ (tested with 22.23.4) and npm. This edition uses Expo SDK 58 and its compatible React/React Native packages.
+Requires Node.js 22.13+ (tested with 24.22.2) and npm. This edition uses Expo SDK 58 and its compatible React/React Native packages.
 
 ```sh
 npm ci
@@ -41,7 +43,7 @@ Each live search sends the entered text to Photon. Selecting a result sends its 
 
 ## How it works
 
-`query → candidate places → explicit selection → parallel weather + air quality requests → independent cards`
+`query → candidate places → explicit selection → parallel weather + air quality requests → independent weather and air sections`
 
 - `src/repositories.ts`: encoded URLs, payload validation, abort/timeouts, models and data mapping.
 - `App.tsx`: interaction state, request cancellation, explicit mode/location changes and stale-result guards.

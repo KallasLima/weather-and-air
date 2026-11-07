@@ -18,6 +18,7 @@ export function Button({
       accessibilityRole="button"
       accessibilityLabel={label}
       disabled={disabled}
+      accessibilityState={{ disabled }}
       onPress={onPress}
       style={({ pressed }) => [
         s.button,
@@ -26,7 +27,7 @@ export function Button({
         pressed && { opacity: 0.7 },
       ]}
     >
-      <Text style={[s.buttonText, secondary && { color: '#315c59' }]}>{label}</Text>
+      <Text style={[s.buttonText, secondary && s.secondaryText]}>{label}</Text>
     </Pressable>
   );
 }
@@ -47,15 +48,24 @@ export function WeatherCard({
       <Text style={s.eyebrow}>{demo ? 'SAMPLE WEATHER' : 'CURRENT WEATHER'}</Text>
       {data ? (
         <>
-          <Text style={s.symbol} aria-hidden={true}>
-            ◒
-          </Text>
-          <Text style={s.temperature}>
-            {Math.round(data.temperature)}
-            <Text style={s.unit}>°C</Text>
-          </Text>
-          <Text style={s.condition}>{weatherLabel(data.code)}</Text>
-          <View style={s.divider} />
+          <View style={s.weatherHero}>
+            <Text style={s.temperature}>
+              {Math.round(data.temperature)}
+              <Text style={s.unit}>°C</Text>
+            </Text>
+            <View style={s.weatherDescription}>
+              <Text style={s.symbol} aria-hidden={true}>
+                {data.code === 0
+                  ? '☀'
+                  : data.code >= 71 && data.code <= 77
+                    ? '❄'
+                    : data.code >= 95
+                      ? 'ϟ'
+                      : '☁'}
+              </Text>
+              <Text style={s.condition}>{weatherLabel(data.code)}</Text>
+            </View>
+          </View>
           <View style={s.metrics}>
             <View>
               <Text style={s.metricLabel}>HUMIDITY</Text>
@@ -88,13 +98,21 @@ export function AirCard({
   return (
     <View style={[s.card, s.air]}>
       <Text style={s.eyebrow}>{demo ? 'SAMPLE AIR QUALITY' : 'AIR QUALITY MODEL'}</Text>
+      <Text style={s.muted}>European Air Quality Index</Text>
       {data ? (
         <>
-          <Text style={s.aqi}>{Math.round(data.aqi)}</Text>
-          <Text style={s.condition}>{airLabel(data.aqi)}</Text>
-          <Text style={s.muted}>European Air Quality Index</Text>
+          <View style={s.airHero}>
+            <Text style={s.aqi}>{Math.round(data.aqi)}</Text>
+            <View style={s.airDescription}>
+              <Text style={s.condition}>{airLabel(data.aqi)}</Text>
+              <Text style={s.metricLabel}>FINE PARTICLES · PM2.5</Text>
+              <Text style={s.metric}>
+                {data.pm25 == null ? 'Unavailable' : data.pm25 + ' µg/m³'}
+              </Text>
+            </View>
+          </View>
           <View style={s.scale} aria-hidden={true}>
-            {['#79a691', '#aec5a4', '#dec98c', '#d6a07d', '#c47c78', '#a16f84'].map((c) => (
+            {['#7bd3ce', '#a6d388', '#eadf84', '#eeb883', '#e48c91', '#c899ca'].map((c) => (
               <View key={c} style={[s.scalePart, { backgroundColor: c }]} />
             ))}
           </View>
@@ -102,9 +120,6 @@ export function AirCard({
             <Text style={s.small}>Good</Text>
             <Text style={s.small}>Extremely poor</Text>
           </View>
-          <View style={s.divider} />
-          <Text style={s.metricLabel}>FINE PARTICLES · PM2.5</Text>
-          <Text style={s.metric}>{data.pm25 == null ? 'Unavailable' : data.pm25 + ' µg/m³'}</Text>
           <Text style={s.timestamp}>{observed(data.time)}</Text>
         </>
       ) : (
